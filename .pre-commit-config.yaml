@@ -1,0 +1,23 @@
+repos:
+-   repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v2.3.0
+    hooks:
+    -   id: end-of-file-fixer
+    -   id: trailing-whitespace
+- repo: local
+  hooks:
+  - id: pylint
+    name: pylint
+    entry: poetry run pylint
+    language: system
+    types: [python]
+    args: [--errors-only]
+- repo: local
+  hooks:
+  - id: pytest-check
+    name: pytest-check
+    entry: poetry run pytest tests/ --tb=short -q
+    language: system
+    types: [python]
+    pass_filenames: false
+    always_run: true
