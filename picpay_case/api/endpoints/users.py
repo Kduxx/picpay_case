@@ -15,12 +15,13 @@ from picpay_case.schemas.response import (
 router = APIRouter(prefix="/users")
 
 
-@router.get("/", response_model=List[UserResponse])
+@router.get("/")
 def list_users(
     user_op: UserOperations = Depends(get_user_operations)
 ):
     users = user_op.get_users()
-    return users
+    user_response = [UserResponse.model_validate(u) for u in users]
+    return success_response(user_response)
 
 
 @router.get("/{user_id}")
@@ -73,7 +74,7 @@ def update_user(
         )
     except Exception as err:
         print(err)
-        return error_response()
+        return error_response(message=f"{err}")
 
 
 @router.delete("/{user_id}")
