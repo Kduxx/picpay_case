@@ -13,6 +13,7 @@ SessionLocal = sessionmaker(
 )
 
 
+# Base ORM class used by other classes to add definitions to
 class Base(DeclarativeBase):
     pass
 
@@ -24,14 +25,10 @@ def create_database_tables():
         raise err
 
 
-def init_db():
-    create_database_tables()
-
-
 def get_db():
     db = SessionLocal()
     try:
-        init_db()
+        create_database_tables()
         yield db
     finally:
         db.close()

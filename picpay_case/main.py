@@ -3,7 +3,7 @@ from picpay_case.api.endpoints import users
 
 app = FastAPI(
     title="Picpay Case - User CRUD API",
-    description="A simple CRUD api for User Management with FasAPI and SQLAlchemy",
+    description="Simple user CRUD api with FasAPI and SQLAlchemy",
     version="1.0.0"
 )
 
@@ -33,4 +33,4 @@ app.include_router(users.router)
 
 def start():
     import uvicorn
-    uvicorn.run("picpay_case.main:app", host="0.0.0.0", port=8080, reload=True)
+    uvicorn.run("picpay_case.main:app", host="0.0.0.0", port=8000, reload=True)
