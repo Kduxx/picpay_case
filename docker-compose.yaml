@@ -1,0 +1,11 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=true
+      - DB_URL=sqlite:////data/db.sqlite
+    volumes:
+      - ./picpay_case:/app/picpay_case
+      - ./data:/data
