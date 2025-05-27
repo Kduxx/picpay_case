@@ -9,28 +9,13 @@ def valid_response(response):
     return response.status_code >= 200 and response.status_code <= 299
 
 
-def success_response(response):
-    """
-    Common validation to check if the response was successfull
-    """
-    jdata = response.json()
-    return jdata.get("status") == "success"
-
-
 def is_successfull_response_asserts(response):
-    valid_code = response.status_code >= 200 and response.status_code <= 299
+    valid_status_code = valid_response(response)
     jdata = response.json()
-    valid_status = jdata.get("status") == "success"
     data = jdata.get('data')
     has_data = data is not None
 
-    return valid_code, valid_status, has_data, data
-
-
-def valid_response_data(response):
-    jdata = response.json()
-    data = jdata.get('data')
-    return data is not None, data
+    return valid_status_code, has_data, data
 
 
 def test_read_root(api_client: TestClient):
@@ -56,11 +41,10 @@ def test_ping_pong(api_client: TestClient):
 def test_list_users(api_client: TestClient, existing_users: User):
     response = api_client.get("/users")
 
-    valid_code, valid_status, has_data, data = \
+    valid_status, has_data, data = \
         is_successfull_response_asserts(response)
 
-    assert valid_code, "Invalid Status Code received from the API"
-    assert valid_status, "Invalid Status received from the API"
+    assert valid_status, "Invalid Status Code received from the API"
     assert has_data, "API returned data as None. JSON object expected"
 
     db_ids = sorted([x.get('id') for x in data])
@@ -72,11 +56,10 @@ def test_list_users(api_client: TestClient, existing_users: User):
 def test_get_user_by_id(api_client: TestClient, existing_user: User):
     response = api_client.get(f"/users/{existing_user.id}")
 
-    valid_code, valid_status, has_data, data = \
+    valid_status, has_data, data = \
         is_successfull_response_asserts(response)
 
-    assert valid_code, "Invalid Status Code received from the API"
-    assert valid_status, "Invalid Status received from the API"
+    assert valid_status, "Invalid Status Code received from the API"
     assert has_data, "API returned data as None. JSON object expected"
 
     validate_fields = ["id", "email", "first_name", "last_name"]
@@ -98,11 +81,10 @@ def test_update_user_by_id(
         json=updates
     )
 
-    valid_code, valid_status, has_data, data = \
+    valid_status, has_data, data = \
         is_successfull_response_asserts(response)
 
-    assert valid_code, "Invalid Status Code received from the API"
-    assert valid_status, "Invalid Status received from the API"
+    assert valid_status, "Invalid Status Code received from the API"
     assert has_data, "API returned data as None. JSON object expected"
 
     for k, v in updates.items():
@@ -112,9 +94,4 @@ def test_update_user_by_id(
 
 def test_delete_user_by_id(api_client: TestClient, existing_user: User):
     response = api_client.delete(f"/users/{existing_user.id}")
-    valid_code, valid_status, has_data, data = \
-        is_successfull_response_asserts(response)
-
-    assert valid_code, "Invalid Status Code received from the API"
-    assert valid_status, "Invalid Status received from the API"
-    assert has_data, "API returned data as None. JSON object expected"
+    assert valid_response(response), "Non success status code received"
