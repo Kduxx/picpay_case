@@ -1,69 +1,8 @@
-import pytest
 from typing import List
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-
 from picpay_case.operations.user import UserOperations
-from picpay_case.models.user import User, Base
+from picpay_case.models.user import User
 from picpay_case.schemas.user import UserCreate
-
-
-@pytest.fixture
-def test_db():
-    """
-    Fixture for initializing a database for running the tests
-    """
-
-    # Uses in-memory sqlite for tests
-    engine = create_engine(
-        "sqlite:///:memory:",
-        connect_args={"check_same_thread": False}
-    )
-
-    session = sessionmaker(
-        autocommit=False, autoflush=False, bind=engine
-    )
-
-    db = session()
-
-    try:
-        # Create tables
-        try:
-            Base.metadata.create_all(bind=engine)
-        except Exception as err:
-            raise err
-        # Yield db session
-        yield db
-    finally:
-        db.close()
-
-
-@pytest.fixture
-def user_op(test_db) -> UserOperations:
-    """
-    Fixture for initializing the UserOperations class with the test db
-    """
-    return UserOperations(test_db)
-
-
-@pytest.fixture
-def existing_user(user_op) -> User:
-    """Fixture that creates a user for tests that need one"""
-    return user_op.create_user(UserCreate(name="Test User"))
-
-
-@pytest.fixture
-def existing_users(user_op) -> List[User]:
-    """Fixture that creates a user for tests that need one"""
-    mock_users = [
-        UserCreate(name="Test User 1"),
-        UserCreate(name="Test User 2"),
-        UserCreate(name="Test User 3"),
-    ]
-
-    created_users = [user_op.create_user(u) for u in mock_users]
-    return created_users
 
 
 def test_create_user(user_op: UserOperations):
