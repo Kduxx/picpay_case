@@ -1,8 +1,6 @@
-from typing import List
-
 from fastapi import APIRouter
 from fastapi import Depends
-from picpay_case.schemas.user import UserResponse, UserCreate
+from picpay_case.schemas.user import UserResponse, UserCreate, UserUpdate
 from picpay_case.operations.user import UserOperations
 from picpay_case.api.deps import get_user_operations
 
@@ -50,7 +48,7 @@ def add_user(
         user_response = UserResponse.model_validate(user)
         return success_response(
             data=user_response,
-            message=f"User {user.name} created with id {user.id}"
+            message=f"User {user.email} created with id {user.id}"
             )
     except Exception as err:
         print(err)
@@ -60,7 +58,7 @@ def add_user(
 @router.put("/{user_id}")
 def update_user(
     user_id: int,
-    user_data: UserCreate,
+    user_data: UserUpdate,
     user_op: UserOperations = Depends(get_user_operations)
 ):
     try:
@@ -70,7 +68,7 @@ def update_user(
         user_response = UserResponse.model_validate(user)
         return success_response(
             data=user_response,
-            message=f"User #{user.id} ({user.name}) Updated"
+            message=f"User #{user.id} ({user.email}) Updated"
         )
     except Exception as err:
         print(err)

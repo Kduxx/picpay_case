@@ -1,4 +1,5 @@
 import pytest
+from faker import Faker
 
 from typing import List
 
@@ -14,6 +15,24 @@ from picpay_case.database import get_db
 from fastapi.testclient import TestClient
 
 from picpay_case.main import app
+
+
+@pytest.fixture(scope="session")
+def fake_data():
+    return Faker()
+
+
+@pytest.fixture
+def user_factory(fake_data):
+    def _create_user_data():
+        return dict(
+            first_name=fake_data.first_name(),
+            last_name=fake_data.last_name(),
+            email=fake_data.email(),
+            birthdate=fake_data.date_of_birth(),
+            phone=fake_data.phone_number()
+        )
+    return _create_user_data
 
 
 @pytest.fixture
@@ -68,18 +87,18 @@ def user_op(test_db) -> UserOperations:
 
 
 @pytest.fixture
-def existing_user(user_op) -> User:
+def existing_user(user_op, user_factory) -> User:
     """Fixture that creates a user for tests that need one"""
-    return user_op.create_user(UserCreate(name="Test User"))
+    user_data = user_factory()
+    return user_op.create_user(UserCreate(**user_data))
 
 
 @pytest.fixture
-def existing_users(user_op) -> List[User]:
+def existing_users(user_op, user_factory) -> List[User]:
     """Fixture that creates a user for tests that need one"""
     test_users = [
-        UserCreate(name="Test User 1"),
-        UserCreate(name="Test User 2"),
-        UserCreate(name="Test User 3"),
+        user_factory()
+        for x in range(5)
     ]
 
-    return [user_op.create_user(u) for u in test_users]
+    return [user_op.create_user(UserCreate(**u)) for u in test_users]

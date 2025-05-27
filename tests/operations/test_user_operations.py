@@ -2,18 +2,17 @@ from typing import List
 
 from picpay_case.operations.user import UserOperations
 from picpay_case.models.user import User
-from picpay_case.schemas.user import UserCreate
+from picpay_case.schemas.user import UserCreate, UserUpdate
 
 
-def test_create_user(user_op: UserOperations):
+def test_create_user(user_op: UserOperations, user_factory):
     """
     This test validates the user creating by creating a new user;
     Tests the functionality and data integrity after creationg.
     """
+    user_data = user_factory()
     created_user = user_op.create_user(
-        user_data=UserCreate(
-            name="Jhon Doe"
-        )
+        user_data=UserCreate(**user_data)
     )
 
     assert created_user is not None and isinstance(created_user, User), \
@@ -26,7 +25,7 @@ def test_create_user(user_op: UserOperations):
 
     assert db_user.id == created_user.id, \
         "ID of created user and the retrieved user don't match"
-    assert db_user.name == created_user.name, \
+    assert db_user.first_name == created_user.first_name, \
         "The name of created user and the retrieved user don't match"
 
 
@@ -45,7 +44,7 @@ def test_get_user(user_op: UserOperations, existing_user: User):
     db_user = user_op.get_user(existing_user.id)
     assert db_user is not None and isinstance(db_user, User), \
         "Data returned from the get_user function is not valid"
-    assert db_user.id is not None and db_user.name is not None, \
+    assert db_user.id is not None and db_user.first_name is not None, \
         "Found null info for non-null fields"
 
 
@@ -81,33 +80,45 @@ def test_get_users(user_op: UserOperations, existing_users: List[User]):
         "Mismatch in the test-created and database-selected IDs"
 
 
-def test_update_user(user_op: UserOperations, existing_user: User):
+def test_update_user(user_op: UserOperations, existing_user: User, fake_data):
     """
     This test updates a test-created user and validates the update
     """
-    new_name = "Updated User Name"
 
-    updated = user_op.update_user(
+    updates = {
+        "first_name": fake_data.first_name(),
+        "last_name": fake_data.last_name(),
+        "email": fake_data.email()
+    }
+
+    user_updated = user_op.update_user(
         user_id=existing_user.id,
-        user_data=UserCreate(name=new_name)
+        user_data=UserUpdate(**updates)
     )
 
-    assert updated is not None and isinstance(updated, User), \
+    assert user_updated is not None and isinstance(user_updated, User), \
         "Invalid user data received from update_user"
-    assert updated.name == new_name, \
-        "The updated user name doesn't match the requested one"
 
-    db_user = user_op.get_user(existing_user.id)
+    def _compare_updates(updates, user):
+        for k, v in updates.items():
 
-    assert db_user.name == new_name, \
-        "The selected user name doesn't match the updated one"
+            assert user.get(k) == updates[k], \
+                f"The updated field `{k}` doesn't match the requested one"
+
+    # Compare with the return of the function (updated user)
+    _compare_updates(updates, user_updated.to_dict())
+
+    db_user = user_op.get_user(existing_user.id).to_dict()
+
+    # Compare by re-selecting the user from the database
+    _compare_updates(updates, db_user)
 
 
 def test_update_non_existing_user(user_op: UserOperations):
     """
     This test attempts to update a non-existing user and validate it's resposes
     """
-    updated = user_op.update_user(999, UserCreate(name="Test"))
+    updated = user_op.update_user(999, UserUpdate())
     assert updated is None, "Invalid response while updating invalid user"
 
 

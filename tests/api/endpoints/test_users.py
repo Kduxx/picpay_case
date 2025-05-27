@@ -79,15 +79,23 @@ def test_get_user_by_id(api_client: TestClient, existing_user: User):
     assert valid_status, "Invalid Status received from the API"
     assert has_data, "API returned data as None. JSON object expected"
 
-    assert data.get("id") == existing_user.id
-    assert data.get("name") == existing_user.name
+    validate_fields = ["id", "email", "first_name", "last_name"]
+    for f in validate_fields:
+        assert data.get(f) == getattr(existing_user, f)
 
 
-def test_update_user_by_id(api_client: TestClient, existing_user: User):
-    new_name = "Updated Name"
+def test_update_user_by_id(
+    api_client: TestClient, existing_user: User, fake_data
+):
+    updates = {
+        "first_name": fake_data.first_name(),
+        "last_name": fake_data.last_name(),
+        "email": fake_data.email()
+    }
+
     response = api_client.put(
         f"/users/{existing_user.id}",
-        json={"name": new_name}
+        json=updates
     )
 
     valid_code, valid_status, has_data, data = \
@@ -97,7 +105,9 @@ def test_update_user_by_id(api_client: TestClient, existing_user: User):
     assert valid_status, "Invalid Status received from the API"
     assert has_data, "API returned data as None. JSON object expected"
 
-    assert data.get('id') == existing_user.id and data.get('name') == new_name
+    for k, v in updates.items():
+        assert data.get(k) == updates.get(k), \
+            f"Updated field `{k}` differs. {v} != {getattr(existing_user, k)}"
 
 
 def test_delete_user_by_id(api_client: TestClient, existing_user: User):

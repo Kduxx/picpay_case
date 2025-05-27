@@ -1,7 +1,7 @@
 from typing import List, Optional
 from sqlalchemy.orm import Session
 from picpay_case.models.user import User
-from picpay_case.schemas.user import UserCreate
+from picpay_case.schemas.user import UserCreate, UserUpdate
 
 
 class UserOperations:
@@ -13,9 +13,9 @@ class UserOperations:
         self.db = db
 
     def create_user(self, user_data: UserCreate) -> User:
-        create_user = User(
-            name=user_data.name
-        )
+
+        user_d = user_data.model_dump()
+        create_user = User(**user_d)
 
         self.db.add(create_user)
         self.db.commit()
@@ -32,7 +32,7 @@ class UserOperations:
     def update_user(
             self,
             user_id: int,
-            user_data: UserCreate
+            user_data: UserUpdate
     ) -> Optional[User]:
         db_user = self.get_user(user_id)
         if not db_user:
