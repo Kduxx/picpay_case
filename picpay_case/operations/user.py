@@ -1,4 +1,5 @@
 from typing import List, Optional
+from sqlalchemy import exists
 from sqlalchemy.orm import Session
 from picpay_case.models.user import User
 from picpay_case.schemas.user import UserCreate, UserUpdate
@@ -15,6 +16,10 @@ class UserOperations:
     def create_user(self, user_data: UserCreate) -> User:
 
         user_d = user_data.model_dump()
+
+        if self.user_exists("email", user_data.email):
+            return None
+
         create_user = User(**user_d)
 
         self.db.add(create_user)
@@ -25,6 +30,9 @@ class UserOperations:
 
     def get_user(self, user_id: int) -> Optional[User]:
         return self.db.query(User).filter(User.id == user_id).first()
+
+    def user_exists(self, key, value) -> bool:
+        return self.db.query(exists().where(getattr(User, key) == value)).scalar()
 
     def get_users(self) -> List[User]:
         return self.db.query(User).all()

@@ -48,6 +48,11 @@ def add_user(
     Endpoint for adding a new user to the database
     """
     user = user_op.create_user(user_data)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="A user with this email already exists."
+        )
     user_response = UserResponse.model_validate(user)
     return success_response(
         data=user_response,
