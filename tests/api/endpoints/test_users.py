@@ -1,3 +1,4 @@
+from json import dumps
 from picpay_case.models.user import User
 from fastapi.testclient import TestClient
 
@@ -36,6 +37,25 @@ def test_ping_pong(api_client: TestClient):
     out = response.json()
     assert out.get("message") == "pong", \
         "Can't play ping pong without the pong"
+
+
+def test_create_user(api_client: TestClient, user_factory, user_op):
+    new_user = user_factory()
+
+    # Convert date to valid json type
+    new_user["birthdate"] = new_user["birthdate"].isoformat()
+
+    response = api_client.post("/users", json=new_user)
+
+    valid_status, has_data, data = \
+        is_successfull_response_asserts(response)
+
+    assert valid_status, "Invalid Status Code received from the API"
+    assert has_data, "API returned data as None. JSON object expected"
+
+    db_user = user_op.get_user(user_id=data.get('id'))
+
+    assert db_user is not None
 
 
 def test_list_users(api_client: TestClient, existing_users: User):

@@ -1,10 +1,10 @@
 from typing import Optional
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, EmailStr, field_validator
 from datetime import datetime, date
 
 
 class UserBase(BaseModel):
-    email: str
+    email: EmailStr
     first_name: str
     last_name: str
     phone: str
@@ -14,6 +14,16 @@ class UserBase(BaseModel):
         from_attributes=True,
         arbitrary_types_allowed=True
     )
+
+    @field_validator("birthdate", mode="before")
+    def validate_birthdate(cls, v):  # pylint: disable=no-self-argument
+        bd = datetime.strptime(v, "%Y-%m-%d").date() \
+            if isinstance(v, str) else v
+        if bd > date.today():
+            raise ValueError("Birth date cannot be in the future.")
+        elif bd == date.today():
+            raise ValueError("Birth date cannot be today.")
+        return v
 
 
 class UserCreate(UserBase):
